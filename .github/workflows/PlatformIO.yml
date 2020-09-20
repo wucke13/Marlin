@@ -7,17 +7,27 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        target: [ STM32F103RC_btt_512K ]
+
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python
       uses: actions/setup-python@v1
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.platformio
+          .pio
+        key: ${{ runner.os }}-pio-run-${{ hashFiles('.pio/build/project.checksum') }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install platformio
     - name: Run PlatformIO
-      run: platformio run -e <ID_1> -e <ID_2> -e <ID_N>
+      run: platformio run --environment ${{ matrix.target }}
     - uses: actions/upload-artifact@master
       with:
-        name: ardupilot-def
-        path: .pio/build/STM32F103RC_btt_512K/firmware.*
+        name: ${{ github.event.repository.name }}-firmware-${{ matrix.target }}
+        path: .pio/build/${{ matrix.target }}/firmware.*
